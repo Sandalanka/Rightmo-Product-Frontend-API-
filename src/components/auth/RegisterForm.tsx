@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/context/AuthContext";
 import { useForm } from "@/hooks/useForm";
 import { validateRegister } from "@/lib/validation/auth";
@@ -11,13 +13,16 @@ import { validateRegister } from "@/lib/validation/auth";
 export function RegisterForm() {
   const { register } = useAuth();
   const router = useRouter();
+  const toast = useToast();
+  const [isNavigating, startTransition] = useTransition();
 
   const { values, errors, formError, isSubmitting, handleChange, handleSubmit } = useForm({
     initialValues: { name: "", email: "", password: "", password_confirmation: "" },
     validate: validateRegister,
     onSubmit: async (data) => {
-      await register(data);
-      router.replace("/dashboard");
+      const user = await register(data);
+      toast.success(`Account created. Welcome, ${user.name}!`);
+      startTransition(() => router.replace("/dashboard"));
     },
   });
 
@@ -44,7 +49,7 @@ export function RegisterForm() {
         onChange={handleChange}
         error={errors.password_confirmation}
       />
-      <Button type="submit" isLoading={isSubmitting} className="w-full">
+      <Button type="submit" isLoading={isSubmitting || isNavigating} className="w-full">
         Create account
       </Button>
     </form>

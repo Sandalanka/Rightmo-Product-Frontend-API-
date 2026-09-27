@@ -6,7 +6,8 @@ import { ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth/session";
 import { authService } from "@/services/auth.service";
 import { user } from "./fixtures";
-import { renderWithAuth } from "./utils/render";
+import { renderWithProviders } from "./utils/render";
+import { expectToast } from "./utils/toast";
 
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }) }));
@@ -16,18 +17,19 @@ describe("LogoutButton", () => {
 
   it("logs out, clears the session and goes to login", async () => {
     const logout = vi.spyOn(authService, "logout").mockResolvedValue();
-    renderWithAuth(<LogoutButton />, { user });
+    renderWithProviders(<LogoutButton />, { user });
 
     await userEvent.click(screen.getByRole("button", { name: "Log out" }));
 
     expect(logout).toHaveBeenCalledOnce();
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/login"));
+    await expectToast("You have been logged out.");
     expect(getToken()).toBeNull();
   });
 
   it("still signs out locally when the API call fails", async () => {
     vi.spyOn(authService, "logout").mockRejectedValue(new ApiError("Server down", 500));
-    renderWithAuth(<LogoutButton />, { user });
+    renderWithProviders(<LogoutButton />, { user });
 
     await userEvent.click(screen.getByRole("button", { name: "Log out" }));
 
@@ -37,7 +39,7 @@ describe("LogoutButton", () => {
 
   it("disables the button while logging out", async () => {
     vi.spyOn(authService, "logout").mockReturnValue(new Promise(() => {}));
-    renderWithAuth(<LogoutButton />, { user });
+    renderWithProviders(<LogoutButton />, { user });
 
     await userEvent.click(screen.getByRole("button", { name: "Log out" }));
 

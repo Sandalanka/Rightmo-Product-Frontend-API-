@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, Ref } from "react";
+import { Spinner } from "./Spinner";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
@@ -32,7 +33,7 @@ export function Button({
       className={`inline-flex items-center justify-center gap-2 rounded-md font-semibold transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
       {...props}
     >
-      {isLoading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />}
+      {isLoading && <Spinner />}
       {children}
     </button>
   );
