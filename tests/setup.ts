@@ -7,3 +7,10 @@ afterEach(() => {
   cleanup();
   clearSession();
 });
+
+// jsdom has no object URLs (used for image previews).
+if (!URL.createObjectURL) {
+  let n = 0;
+  URL.createObjectURL = () => `blob:test/${++n}`;
+  URL.revokeObjectURL = () => {};
+}

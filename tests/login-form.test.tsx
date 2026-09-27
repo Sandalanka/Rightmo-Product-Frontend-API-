@@ -2,10 +2,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
 import { authService } from "@/services/auth.service";
 import { authPayload } from "./fixtures";
+import { expectToast } from "./utils/toast";
 
 const replace = vi.fn();
 let search = new URLSearchParams();
@@ -16,9 +18,11 @@ vi.mock("next/navigation", () => ({
 
 const renderForm = () =>
   render(
-    <AuthProvider>
-      <LoginForm />
-    </AuthProvider>,
+    <ToastProvider>
+      <AuthProvider>
+        <LoginForm />
+      </AuthProvider>
+    </ToastProvider>,
   );
 
 async function fillAndSubmit(email: string, password: string) {
@@ -53,6 +57,7 @@ describe("LoginForm", () => {
 
     expect(login).toHaveBeenCalledWith({ email: "jane@example.com", password: "Secret@123" });
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard"));
+    await expectToast("Welcome back, Jane Doe!");
   });
 
   it("redirects back to a safe ?redirect= path", async () => {
@@ -82,6 +87,7 @@ describe("LoginForm", () => {
     await fillAndSubmit("jane@example.com", "wrong");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid email or password.");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
   });
 });

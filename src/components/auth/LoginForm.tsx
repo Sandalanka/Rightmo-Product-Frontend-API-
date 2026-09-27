@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTransition } from "react";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/context/AuthContext";
 import { useForm } from "@/hooks/useForm";
 import { validateLogin } from "@/lib/validation/auth";
@@ -17,13 +19,17 @@ export function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const toast = useToast();
+  // Keeps the button spinning until the next page has loaded, not just until the API answers.
+  const [isNavigating, startTransition] = useTransition();
 
   const { values, errors, formError, isSubmitting, handleChange, handleSubmit } = useForm({
     initialValues: { email: "", password: "" },
     validate: validateLogin,
     onSubmit: async (credentials) => {
-      await login(credentials);
-      router.replace(safeRedirect(searchParams.get("redirect")));
+      const user = await login(credentials);
+      toast.success(`Welcome back, ${user.name}!`);
+      startTransition(() => router.replace(safeRedirect(searchParams.get("redirect"))));
     },
   });
 
@@ -45,7 +51,7 @@ export function LoginForm() {
         onChange={handleChange}
         error={errors.password}
       />
-      <Button type="submit" isLoading={isSubmitting} className="w-full">
+      <Button type="submit" isLoading={isSubmitting || isNavigating} className="w-full">
         Sign in
       </Button>
     </form>
