@@ -2,10 +2,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
 import { authService } from "@/services/auth.service";
 import { authPayload } from "./fixtures";
+import { expectToast } from "./utils/toast";
 
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }) }));
@@ -23,9 +25,11 @@ describe("RegisterForm", () => {
   beforeEach(() => {
     replace.mockClear();
     render(
-      <AuthProvider>
-        <RegisterForm />
-      </AuthProvider>,
+      <ToastProvider>
+        <AuthProvider>
+          <RegisterForm />
+        </AuthProvider>
+      </ToastProvider>,
     );
   });
 
@@ -51,6 +55,7 @@ describe("RegisterForm", () => {
       password_confirmation: "Secret@123",
     });
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard"));
+    await expectToast("Account created. Welcome, Jane Doe!");
   });
 
   it("shows server-side field errors under the matching input", async () => {
